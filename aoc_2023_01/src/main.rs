@@ -31,8 +31,7 @@ fn read_line_gold(line: &str) -> u32 {
             }
         }
     }
-                                                 
-
+    
     assert!(nums.len() > 0, "No numbers found");
     nums.front().unwrap() * 10 + nums.back().unwrap()
 }
