@@ -85,7 +85,6 @@ fn main()
         .filter(|(_,g)| g.is_game_valid(12, 13, 14))
         .map(|(i,_)| i+1)
         .sum::<usize>();
-
     println!("Silver: {}", silver_ans);
     
     let gold_ans = games.iter()
