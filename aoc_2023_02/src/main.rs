@@ -19,22 +19,16 @@ impl Game
     fn from(line: &str) -> Game
     {
         let mut game = Game::new();
-        let rounds: Vec<_> = line
-            .split(':')
-            .skip(1)
-            .next()
-            .unwrap()
-            .split(';')
-            .collect();
+        let rounds: Vec<_> = line.split_once(": ").unwrap().1.split("; ").collect();
 
          for r in rounds
          {
              let mut round = HashMap::new();
-             let data: Vec<_> = r.split(',').collect();
+             let data: Vec<_> = r.split(", ").collect();
              for d in data
              {
-                 let kv: Vec<_> = d[1..].split(' ').collect();
-                 round.insert(kv[1].to_string(), kv[0].parse::<u32>().unwrap());
+                let (value, key) = d.split_once(' ').unwrap();
+                round.insert(key.to_string(), value.parse::<u32>().unwrap());
              }
              game.rounds.push(round);
         }
