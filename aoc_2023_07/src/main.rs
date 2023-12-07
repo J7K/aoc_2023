@@ -33,6 +33,7 @@ lazy_static!{
         ('4', 4),
         ('3', 3),
         ('2', 2),
+        ('X', 1)
     ].into_iter().collect();
 }
 
@@ -46,14 +47,27 @@ struct Hand
 
 impl Hand
 {
-    fn from(txt: &str) -> Self
+    fn from(txt: &str, jacks_are_jokers: bool) -> Self
     {         
         let (cards_txt, bid_txt) = txt.split_once(' ').unwrap();        
         let mut hand: Hand =  Hand { cards: cards_txt.chars().collect::<Vec<char>>(),
             bid: bid_txt.parse::<usize>().unwrap(),
             strength: 0};        
 
-        let card_groups: HashMap<char, usize> = hand.cards.iter().fold(HashMap::new(), |mut acc, &c| { *acc.entry(c).or_insert(0) += 1; acc });
+        let mut card_groups: HashMap<char, usize> = hand.cards.iter().fold(HashMap::new(), |mut acc, &c| { *acc.entry(c).or_insert(0) += 1; acc });
+
+        if jacks_are_jokers
+        {
+            hand.cards.iter_mut().for_each(|c| if *c =='J' { *c = 'X' });
+            let jack_count = *card_groups.get(&'J').unwrap_or(&0);
+            if jack_count < 5
+            {
+                card_groups.remove(&'J');
+                let (max_key, max_val)= card_groups.iter().max_by_key(|(_, &v)| v).unwrap();
+                card_groups.insert(*max_key, max_val + jack_count);
+            }
+        }        
+
         match card_groups.len()
         {
             1 => hand.strength = CardStrength::FiveOfAKind as usize,
@@ -81,12 +95,15 @@ impl Hand
 impl PartialOrd for Hand
 {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering>
-    {
-        
+    {        
         if self.strength == other.strength
         {
-            let cv1 = self.cards.iter().map(|&c| CARD_VALUES.get(&c).unwrap()).collect::<Vec<&usize>>();
-            let cv2 = other.cards.iter().map(|&c| CARD_VALUES.get(&c).unwrap()).collect::<Vec<&usize>>();
+            let cv1 = self.cards.iter()
+                .map(|&c| CARD_VALUES.get(&c).unwrap())
+                .collect::<Vec<&usize>>();
+            let cv2 = other.cards.iter()
+                .map(|&c| CARD_VALUES.get(&c).unwrap())
+                .collect::<Vec<&usize>>();
             Some(cv1.cmp(&cv2))
         }
         else
@@ -113,12 +130,21 @@ fn main()
     let mut data: String = String::new();
     BufReader::new(file).read_to_string(&mut data).expect("Failed to read file");
 
-    let mut hands: Vec<_> = data.lines().map(|line| Hand::from(line)).collect::<Vec<Hand>>();
+    let mut hands: Vec<Hand> = data.lines().map(|line| Hand::from(line, false)).collect();
     hands.sort();
     
     let silver_ans = hands.iter()
         .enumerate()
         .map(|(i, hand)| hand.bid * (i+1))
         .sum::<usize>();
-    println!("Silver: {}", silver_ans);    
+    println!("Silver: {}", silver_ans);
+    
+    let mut jocking_hands: Vec<Hand> = data.lines().map(|line| Hand::from(line, true)).collect();
+    jocking_hands.sort();
+
+    let gold_ans = jocking_hands.iter()
+        .enumerate()
+        .map(|(i, hand)| hand.bid * (i+1))
+        .sum::<usize>();
+    println!("Gold: {}", gold_ans);
 }
