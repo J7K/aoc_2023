@@ -55,7 +55,7 @@ impl NodeMap<'_>
 
         while  keep_looping
         {            
-            while current_node.chars().last().unwrap() != 'Z' || steps_count == 0 
+            while current_node.chars().last().unwrap() != 'Z'
             {
                 let (left, right) = self.nodes.get(current_node).unwrap();
                 if path[current_step] == 'L' 
