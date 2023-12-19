@@ -27,9 +27,11 @@ impl SpringRow
         let control_vec = row.control_vec.clone();
         for _ in 0..4 
         {
+            row.springs.push('?');
             row.springs.extend(springs.iter());
             row.control_vec.extend(control_vec.iter());
         }
+        row.springs.pop();
         row
     }
 
@@ -70,9 +72,14 @@ impl SpringRow
     {
         let option_count = self.springs.iter().filter(|c| **c == '?').count();
         let mut arrangements: Vec<Vec<char>> = Vec::new();
-
+        let nb_expected_springs = self.control_vec.iter().sum::<usize>();
+        let nb_expected_switch = nb_expected_springs - self.springs.iter().filter(|c| **c == '#').count(); 
+        dbg!(nb_expected_springs);
+        dbg!(nb_expected_switch);
         for i in 0..(2_usize.pow(option_count as u32))
         {
+            if bit_count(i as u32) != nb_expected_switch as u32 { continue; }   
+            
             let mut arr = self.springs.clone();
             let mut option_bits = i;
             for c in arr.iter_mut()
@@ -90,6 +97,13 @@ impl SpringRow
         }
         arrangements
     }
+}
+
+fn bit_count(u: u32) -> u32
+{
+    let nu = u as u64;
+    let u_count = nu - ((nu >> 1) & 0x033333333333) - ((nu >> 2) & 0x011111111111);
+    return (((u_count + (u_count >> 3)) & 0x030707070707) % 63) as u32;    
 }
 
 fn main() {
